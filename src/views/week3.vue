@@ -1,123 +1,9 @@
-<template>
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-md-4">
-        <div class="list-group">
-          <a
-            href="#"
-            class="list-group-item list-group-item-action"
-            v-for="d in data"
-            :key="data.id"
-            @click.prevent="addToCart(d)"
-          >
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">
-                {{ d.name }}
-                <small>${{ d.price }}</small>
-              </h5>
-            </div>
-            <p class="mb-1">{{ d.detail }}</p>
-          </a>
-        </div>
-      </div>
-      <div class="col-md-8">
-        <div v-if="cart.length === 0" class="alert alert-primary text-center" role="alert">
-          請選擇商品
-        </div>
-        <div v-else>
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col" width="50">操作</th>
-                <th scope="col">品項</th>
-                <th scope="col">描述</th>
-                <th scope="col" width="90">數量</th>
-                <th scope="col">單價</th>
-                <th scope="col">小計</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="d in cart" :key="cart.id">
-                <td>
-                  <button @click="deleteCart(d.id)" class="btn btn-secondary btn-sm" type="button">
-                    x
-                  </button>
-                </td>
-                <td>{{ d.name }}</td>
-                <td>
-                  <small>{{ d.detail }}</small>
-                </td>
-                <td>
-                  <select class="form-select" v-model="d.amount" @change="updateCart(d)">
-                    <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
-                  </select>
-                </td>
-                <td>{{ d.price }}</td>
-                <td>{{ itemSum(d) }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="text-end mb-3">
-            <h4>
-              總計：<span>${{ total }}</span>
-            </h4>
-            <textarea
-              class="form-control mb-3"
-              rows="3"
-              placeholder="備註"
-              v-model="description"
-            ></textarea>
-            <div class="text-end">
-              <button @click.prevent="createOrder" class="btn btn-primary">送出</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <hr />
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div v-if="!order.id" class="alert alert-primary text-center" role="alert">
-          尚未建立訂單
-        </div>
-        <div v-else class="card">
-          <div class="card-body">
-            <div class="card-title">
-              <h3>訂單</h3>
-            </div>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">品項</th>
-                  <th scope="col" width="90">數量</th>
-                  <th scope="col">小計</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="d in order.cart" :key="d.id">
-                  <td>{{ d.name }}</td>
-                  <td>{{ d.amount }}</td>
-                  <td>{{ itemSum(d) }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="text-end mb-3">
-              <div>備註：{{ order.description }}</div>
-              <br />
-              <h4>
-                總計：<span>${{ order.total }}</span>
-              </h4>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <br />
-  </div>
-</template>
-
 <script setup>
 import { ref, computed } from 'vue'
+import SellGoods from '@/components/SellGoods.vue'
+import SelectCart from '@/components/SelectCart.vue'
+import ConfirmOrder from '@/components/ConfirmOrder.vue'
+
 const data = ref([
   {
     id: 1,
@@ -216,8 +102,72 @@ const createOrder = () => {
     description: description.value,
     total: total.value
   }
-  console.log(order.value)
   cart.value = []
   description.value = ''
 }
 </script>
+
+<template>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="list-group">
+          <SellGoods :data="data" @add-to-cart="addToCart" />
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div v-if="cart.length === 0" class="alert alert-primary text-center" role="alert">
+          請選擇商品
+        </div>
+        <div v-else>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col" width="50">操作</th>
+                <th scope="col">品項</th>
+                <th scope="col">描述</th>
+                <th scope="col" width="90">數量</th>
+                <th scope="col">單價</th>
+                <th scope="col">小計</th>
+              </tr>
+            </thead>
+            <tbody>
+              <SelectCart
+                :cart="cart"
+                @deleteCart="deleteCart"
+                @updateCart="updateCart"
+                @itemSum="itemSum"
+              />
+            </tbody>
+          </table>
+          <div class="text-end mb-3">
+            <h4>
+              總計：<span>${{ total }}</span>
+            </h4>
+            <textarea
+              class="form-control mb-3"
+              rows="3"
+              placeholder="備註"
+              v-model="description"
+            ></textarea>
+            <div class="text-end">
+              <button @click.prevent="createOrder" class="btn btn-primary">送出</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div v-if="!order.id" class="alert alert-primary text-center" role="alert">
+          尚未建立訂單
+        </div>
+        <div v-else class="card">
+          <ConfirmOrder :order="order" @itemSum="itemSum" />
+        </div>
+      </div>
+    </div>
+    <br />
+  </div>
+</template>
